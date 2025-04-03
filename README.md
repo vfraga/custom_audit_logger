@@ -13,6 +13,21 @@ This base version logs the following HTTP headers:
 - X-Forwarded-For
 - Referer
 
+# Configuration
+
+Add the below to the `<IS_HOME>/repository/conf/deployment.toml` file:
+```toml
+[[event_listener]]
+id = "custom_audit_logger"
+type = "org.wso2.carbon.user.core.listener.UserOperationEventListener"
+name = "org.wso2.custom.audit.logger.CustomAuditLogger"
+order = "9983"
+enable = true
+
+[[catalina.valves]]
+properties.className = "org.wso2.custom.tomcat.valve.RequestDataExtractorValve"
+```
+
 ---
 
 - [1] https://is.docs.wso2.com/en/5.10.0/develop/user-store-listeners/
