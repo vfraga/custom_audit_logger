@@ -1,4 +1,4 @@
-package org.wso2.custom.audit.logger.internal;
+package org.sample.custom.audit.logger.internal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -12,7 +12,7 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
 import org.wso2.carbon.user.core.listener.UserOperationEventListener;
-import org.wso2.custom.audit.logger.CustomAuditLogger;
+import org.sample.custom.audit.logger.CustomAuditLogger;
 
 @Component(
         name = "custom.audit.logger.bundle",

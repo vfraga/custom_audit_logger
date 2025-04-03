@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>custom_audit_logger</artifactId>
-    <groupId>org.wso2.custom.audit.logger</groupId>
+    <groupId>org.sample.custom.audit.logger</groupId>
     <version>1.0.0-SNAPSHOT</version>
     <name>Custom Audit Logger</name>
 
@@ -59,15 +59,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.wso2.carbon</groupId>
-            <artifactId>org.wso2.carbon.user.api</artifactId>
-            <version>${carbon.kernel.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.equinox</groupId>
-                    <artifactId>javax.servlet</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons-logging.version}</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon</groupId>
@@ -115,12 +109,12 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            org.wso2.custom.audit.logger.internal
+                            org.sample.custom.audit.logger.internal
                         </Private-Package>
                         <Export-Package>
-                            !org.wso2.custom.audit.logger.internal,
-                            org.wso2.custom.audit.logger.*; version="${project.version}",
-                            org.wso2.custom.tomcat.valve.*; version="${project.version}"
+                            !org.sample.custom.audit.logger.internal,
+                            org.sample.custom.audit.logger.*; version="${project.version}",
+                            org.sample.custom.tomcat.valve.*; version="${project.version}"
                         </Export-Package>
                         <Import-Package>
                             javax.servlet.*; version="${javax.servlet.version.range}",
@@ -129,6 +123,7 @@
                             org.osgi.service.component.*;version="${osgi.service.component.version.range}",
 
                             org.slf4j; version="${org.slf4j.version.range}",
+                            org.apache.commons.logging; version="${commons-logging.osgi.version.range}",
 
                             org.apache.catalina.*; version="1.7.0",
 
@@ -162,7 +157,6 @@
         <carbon.kernel.version>4.6.0</carbon.kernel.version>
 
         <carbon.kernel.version.range>[4.6.0, 5.0.0)</carbon.kernel.version.range>
-        <carbon.user.api.version.range>[1.0.1, 2.0.0)</carbon.user.api.version.range>
 
         <!--Carbon Identity Framework-->
         <carbon.identity.framework.version>5.17.5</carbon.identity.framework.version>
@@ -171,11 +165,15 @@
 
         <!-- Common versions -->
         <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
+        <commons-logging.version>1.2</commons-logging.version>
 
         <osgi.framework.version.range>[1.7.0, 2.0.0)</osgi.framework.version.range>
         <osgi.service.component.version.range>[1.2.0, 2.0.0)</osgi.service.component.version.range>
 
         <org.slf4j.version.range>[1.6.1,2.0.0)</org.slf4j.version.range>
         <javax.servlet.version.range>[2.6.0, 3.0.0)</javax.servlet.version.range>
+
+        <commons-lang.wso2.osgi.version.range>[2.6.0,3.0.0)</commons-lang.wso2.osgi.version.range>
+        <commons-logging.osgi.version.range>[1.2,2.0)</commons-logging.osgi.version.range>
     </properties>
 </project>

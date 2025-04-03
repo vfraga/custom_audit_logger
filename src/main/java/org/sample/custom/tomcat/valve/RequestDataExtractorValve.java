@@ -1,4 +1,4 @@
-package org.wso2.custom.tomcat.valve;
+package org.sample.custom.tomcat.valve;
 
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;

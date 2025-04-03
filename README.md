@@ -20,16 +20,57 @@ Add the below to the `<IS_HOME>/repository/conf/deployment.toml` file:
 [[event_listener]]
 id = "custom_audit_logger"
 type = "org.wso2.carbon.user.core.listener.UserOperationEventListener"
-name = "org.wso2.custom.audit.logger.CustomAuditLogger"
+name = "org.sample.custom.audit.logger.CustomAuditLogger"
 order = "9983"
 enable = true
 
 [[catalina.valves]]
-properties.className = "org.wso2.custom.tomcat.valve.RequestDataExtractorValve"
+properties.className = "org.sample.custom.tomcat.valve.RequestDataExtractorValve"
 ```
+
+Add the below to the `<IS_HOME>/repository/conf/log4j2.properties` file:
+1. Create a Log4J2 Appender [4] named `CUSTOM_AUDIT_LOGFILE` and add it to the existing `appenders` variable:
+
+```properties
+appenders = CARBON_CONSOLE, ..., CUSTOM_AUDIT_LOGFILE
+
+appender.CUSTOM_AUDIT_LOGFILE.type = RollingFile
+appender.CUSTOM_AUDIT_LOGFILE.name = CUSTOM_AUDIT_LOGFILE
+appender.CUSTOM_AUDIT_LOGFILE.fileName = ${sys:carbon.home}/repository/logs/custom_access_log.log
+appender.CUSTOM_AUDIT_LOGFILE.filePattern = ${sys:carbon.home}/repository/logs/custom_access_log-%d{MM-dd-yyyy}.%i.log
+appender.CUSTOM_AUDIT_LOGFILE.layout.type = PatternLayout
+appender.CUSTOM_AUDIT_LOGFILE.layout.pattern = [%X{Correlation-ID}] %mm%n
+appender.CUSTOM_AUDIT_LOGFILE.policies.type = Policies
+appender.CUSTOM_AUDIT_LOGFILE.policies.time.type = TimeBasedTriggeringPolicy
+appender.CUSTOM_AUDIT_LOGFILE.policies.time.interval = 1
+appender.CUSTOM_AUDIT_LOGFILE.policies.time.modulate = true
+appender.CUSTOM_AUDIT_LOGFILE.policies.size.type = SizeBasedTriggeringPolicy
+appender.CUSTOM_AUDIT_LOGFILE.policies.size.size = 10MB
+appender.CUSTOM_AUDIT_LOGFILE.strategy.type = DefaultRolloverStrategy
+appender.CUSTOM_AUDIT_LOGFILE.strategy.max = 20
+appender.CUSTOM_AUDIT_LOGFILE.filter.threshold.type = ThresholdFilter
+appender.CUSTOM_AUDIT_LOGFILE.filter.threshold.level = INFO
+```
+2. Create a Log4J2 Logger [5] named `CUSTOM_AUDIT_LOG` mapped to the `org.sample.custom.audit.logger.CustomAuditLogger` class, set the appender reference to `CUSTOM_AUDIT_LOGFILE`, and add it to the existing `loggers` variable:
+
+```properties
+loggers = AUDIT_LOG, . . ., CUSTOM_AUDIT_LOG
+
+logger.CUSTOM_AUDIT_LOG.name = org.sample.custom.audit.logger.CustomAuditLogger
+logger.CUSTOM_AUDIT_LOG.level = INFO
+logger.CUSTOM_AUDIT_LOG.appenderRef.CUSTOM_AUDIT_LOGFILE.ref = CUSTOM_AUDIT_LOGFILE
+logger.CUSTOM_AUDIT_LOG.additivity = false
+```
+
+* _The policies for this appender rotate the log file every 10 MB and every day. You can adjust this to your liking, see [6]._
+* _You can adjust the log pattern (called pattern converters) to your liking, see [7]._
 
 ---
 
 - [1] https://is.docs.wso2.com/en/5.10.0/develop/user-store-listeners/
 - [2] https://tomcat.apache.org/tomcat-9.0-doc/config/valve.html
 - [3] https://tomcat.apache.org/tomcat-9.0-doc/api/org/apache/catalina/Valve.html
+- [4] https://logging.apache.org/log4j/2.x/manual/appenders.html
+- [5] https://logging.apache.org/log4j/2.x/manual/configuration.html#configuring-loggers
+- [6] https://logging.apache.org/log4j/2.x/manual/appenders/rolling-file.html
+- [7] https://logging.apache.org/log4j/2.x/manual/pattern-layout.html#converters
