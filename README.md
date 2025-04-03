@@ -55,7 +55,7 @@ appender.CUSTOM_AUDIT_LOGFILE.filter.threshold.level = INFO
 ```
 
 * _The policies for this appender rotate the log file every 10 MB and every day. You can adjust this to your liking, see [5]._
-* _You can adjust the log pattern (called pattern converters) to your liking, see [6]._
+* _You can adjust the appender log pattern (`appender.CUSTOM_AUDIT_LOGFILE.layout.pattern`)  with the pattern converters that adjust best to your requirement, see [6]. It's recommended to keep the `%X{Correlation-ID}` for cross-reference with other log files._
 
 2. Create a Log4J2 Logger [7] named `CUSTOM_AUDIT_LOG` mapped to the `org.sample.custom.audit.logger.CustomAuditLogger` class, set the appender reference to `CUSTOM_AUDIT_LOGFILE`, and add it to the existing `loggers` variable:
 
