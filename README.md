@@ -13,7 +13,7 @@ This base version logs the following HTTP headers:
 - X-Forwarded-For
 - Referer
 
-# Configuration
+### Configuration
 
 Add the below to the `<IS_HOME>/repository/conf/deployment.toml` file:
 ```toml
