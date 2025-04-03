@@ -54,10 +54,10 @@ appender.CUSTOM_AUDIT_LOGFILE.filter.threshold.type = ThresholdFilter
 appender.CUSTOM_AUDIT_LOGFILE.filter.threshold.level = INFO
 ```
 
-* _The policies for this appender rotate the log file every 10 MB and every day. You can adjust this to your liking, see [6]._
-* _You can adjust the log pattern (called pattern converters) to your liking, see [7]._
+* _The policies for this appender rotate the log file every 10 MB and every day. You can adjust this to your liking, see [5]._
+* _You can adjust the log pattern (called pattern converters) to your liking, see [6]._
 
-2. Create a Log4J2 Logger [5] named `CUSTOM_AUDIT_LOG` mapped to the `org.sample.custom.audit.logger.CustomAuditLogger` class, set the appender reference to `CUSTOM_AUDIT_LOGFILE`, and add it to the existing `loggers` variable:
+2. Create a Log4J2 Logger [7] named `CUSTOM_AUDIT_LOG` mapped to the `org.sample.custom.audit.logger.CustomAuditLogger` class, set the appender reference to `CUSTOM_AUDIT_LOGFILE`, and add it to the existing `loggers` variable:
 
 ```properties
 loggers = AUDIT_LOG, . . ., CUSTOM_AUDIT_LOG
@@ -74,6 +74,6 @@ logger.CUSTOM_AUDIT_LOG.additivity = false
 - [2] https://tomcat.apache.org/tomcat-9.0-doc/config/valve.html
 - [3] https://tomcat.apache.org/tomcat-9.0-doc/api/org/apache/catalina/Valve.html
 - [4] https://logging.apache.org/log4j/2.x/manual/appenders.html
-- [5] https://logging.apache.org/log4j/2.x/manual/configuration.html#configuring-loggers
-- [6] https://logging.apache.org/log4j/2.x/manual/appenders/rolling-file.html
-- [7] https://logging.apache.org/log4j/2.x/manual/pattern-layout.html#converters
+- [5] https://logging.apache.org/log4j/2.x/manual/appenders/rolling-file.html
+- [6] https://logging.apache.org/log4j/2.x/manual/pattern-layout.html#converters
+- [7] https://logging.apache.org/log4j/2.x/manual/configuration.html#configuring-loggers
