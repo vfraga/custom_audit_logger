@@ -13,6 +13,8 @@ This base version logs the following HTTP headers:
 - X-Forwarded-For
 - Referer
 
+---
+
 ### Configuration
 
 Add the below to the `<IS_HOME>/repository/conf/deployment.toml` file:
@@ -51,6 +53,10 @@ appender.CUSTOM_AUDIT_LOGFILE.strategy.max = 20
 appender.CUSTOM_AUDIT_LOGFILE.filter.threshold.type = ThresholdFilter
 appender.CUSTOM_AUDIT_LOGFILE.filter.threshold.level = INFO
 ```
+
+* _The policies for this appender rotate the log file every 10 MB and every day. You can adjust this to your liking, see [6]._
+* _You can adjust the log pattern (called pattern converters) to your liking, see [7]._
+
 2. Create a Log4J2 Logger [5] named `CUSTOM_AUDIT_LOG` mapped to the `org.sample.custom.audit.logger.CustomAuditLogger` class, set the appender reference to `CUSTOM_AUDIT_LOGFILE`, and add it to the existing `loggers` variable:
 
 ```properties
@@ -61,9 +67,6 @@ logger.CUSTOM_AUDIT_LOG.level = INFO
 logger.CUSTOM_AUDIT_LOG.appenderRef.CUSTOM_AUDIT_LOGFILE.ref = CUSTOM_AUDIT_LOGFILE
 logger.CUSTOM_AUDIT_LOG.additivity = false
 ```
-
-* _The policies for this appender rotate the log file every 10 MB and every day. You can adjust this to your liking, see [6]._
-* _You can adjust the log pattern (called pattern converters) to your liking, see [7]._
 
 ---
 
