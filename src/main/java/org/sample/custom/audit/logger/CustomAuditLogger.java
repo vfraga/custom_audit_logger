@@ -2,7 +2,7 @@ package org.sample.custom.audit.logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sample.custom.tomcat.valve.RequestDataExtractorValve.Constants;
+import org.sample.custom.tomcat.valve.CustomAuditLoggerValve.Constants;
 import org.slf4j.MDC;
 import org.wso2.carbon.identity.core.AbstractIdentityUserOperationEventListener;
 import org.wso2.carbon.user.core.UserStoreManager;

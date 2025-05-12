@@ -27,7 +27,7 @@ order = "9983"
 enable = true
 
 [[catalina.valves]]
-properties.className = "org.sample.custom.tomcat.valve.RequestDataExtractorValve"
+properties.className = "org.sample.custom.tomcat.valve.CustomAuditLoggerValve"
 ```
 
 Add the below to the `<IS_HOME>/repository/conf/log4j2.properties` file:

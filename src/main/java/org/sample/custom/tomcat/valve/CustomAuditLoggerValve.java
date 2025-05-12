@@ -13,8 +13,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class RequestDataExtractorValve extends ValveBase {
-    private static final Log log = LogFactory.getLog(RequestDataExtractorValve.class);
+public class CustomAuditLoggerValve extends ValveBase {
+    private static final Log log = LogFactory.getLog(CustomAuditLoggerValve.class);
 
     @Override
     public void invoke(final Request request, final Response response) throws ServletException, IOException {
@@ -41,13 +41,17 @@ public class RequestDataExtractorValve extends ValveBase {
             // This line is reached after the Identity Server executed (including CustomAuditLogger)
             // has likely completed for this specific HTTP request processing path.
             MDC.put(Constants.HTTP_STATUS_CODE, Integer.toString(response.getStatus()));
-
-            // Trigger the logging
-            CustomAuditLogger.logFromMDCData();
         } catch (Throwable e) {
             // Prevent any errors from propagating and failing healthy requests to the client
-            log.debug("Error while logging request data", e);
+            log.debug("Error while extracting HTTP request/response data", e);
         } finally {
+            try {
+                // Trigger the logging on a finally block to ensure it is also executed if the request fails
+                CustomAuditLogger.logFromMDCData();
+            } catch (Throwable e) {
+                // Prevent any errors from propagating and failing healthy requests to the client
+                log.debug("Error while logging request data", e);
+            }
             // Unset the MDC thread locals after use (request should be completed) to avoid memory leaks
             unsetMDCThreadLocals();
         }
