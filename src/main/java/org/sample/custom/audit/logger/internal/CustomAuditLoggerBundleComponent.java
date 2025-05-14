@@ -10,9 +10,11 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
-import org.wso2.carbon.user.core.listener.UserOperationEventListener;
 import org.sample.custom.audit.logger.CustomAuditLogger;
+import org.wso2.carbon.identity.application.authentication.framework.ApplicationAuthenticationService;
+import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
+import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
+import org.wso2.carbon.user.core.service.RealmService;
 
 @Component(
         name = "custom.audit.logger.bundle",
@@ -25,7 +27,7 @@ public class CustomAuditLoggerBundleComponent {
         final CustomAuditLogger customAuditLogger = new CustomAuditLogger();
 
         final ServiceRegistration<?> customAuditLoggerServiceRegistrationResult = context.getBundleContext()
-                .registerService(UserOperationEventListener.class.getName(), customAuditLogger, null);
+                .registerService(AbstractEventHandler.class.getName(), customAuditLogger, null);
 
         if (customAuditLoggerServiceRegistrationResult == null) {
             log.error("Error registering CustomAuditLogger as a UserOperationEventListener.");
@@ -42,27 +44,46 @@ public class CustomAuditLoggerBundleComponent {
     }
 
     @Reference(
-            name = "user.operation.event.listener.service",
-            cardinality = ReferenceCardinality.MULTIPLE,
+            name = "RealmService",
+            service = RealmService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
             policy = ReferencePolicy.DYNAMIC,
-            unbind = "unsetUserOperationEventListenerService")
-    protected synchronized void setUserOperationEventListenerService(final UserOperationEventListener ignored) {
-        // do nothing: waiting for component to initialise so that we can register the custom event listener in the UMListenerServiceComponent
+            unbind = "unsetRealmService"
+    )
+    protected void setRealmService(final RealmService realmService) {
+        log.debug("Setting the Realm Service.");
+        ServiceHolder.getInstance().setRealmService(realmService);
     }
 
-    protected synchronized void unsetUserOperationEventListenerService(final UserOperationEventListener ignored) {
-        // do nothing: method declaration for the unbind action for setUserOperationEventListenerService
+    protected void unsetRealmService(final RealmService realmService) {
+        log.debug("Unsetting the Realm Service.");
+        ServiceHolder.getInstance().setRealmService(null);
     }
 
     @Reference(
-            name = "identityCoreInitializedEventService",
+            name = "identity.application.authentication.framework",
+            service = ApplicationAuthenticationService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetApplicationAuthenticationService"
+    )
+    protected void setApplicationAuthenticationService(final ApplicationAuthenticationService ignored) {
+        // do nothing: waiting for ApplicationAuthenticationService to initialise
+    }
+
+    protected void unsetApplicationAuthenticationService(final ApplicationAuthenticationService ignored) {
+        // do nothing: method declaration for the unbind action for setApplicationAuthenticationService
+    }
+
+    @Reference(
+            name = "identity.core.init.event.service",
             service = IdentityCoreInitializedEvent.class,
             cardinality = ReferenceCardinality.MANDATORY,
             policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetIdentityCoreInitializedEventService"
     )
     protected void setIdentityCoreInitializedEventService(final IdentityCoreInitializedEvent ignored) {
-        // do nothing: waiting for component to initialise
+        // do nothing: waiting for IdentityCoreInitializedEvent to initialise
     }
 
     protected void unsetIdentityCoreInitializedEventService(final IdentityCoreInitializedEvent ignored) {

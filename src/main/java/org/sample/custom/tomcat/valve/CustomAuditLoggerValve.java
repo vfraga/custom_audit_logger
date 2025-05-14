@@ -70,6 +70,7 @@ public class CustomAuditLoggerValve extends ValveBase {
         public static final String AUTHENTICATED = "Authenticated";
         public static final String LOG_MESSAGE = "LogMessage";
         public static final String HTTP_STATUS_CODE = "HttpStatusCode";
+        public static final String ROLE_LIST = "RoleList";
 
         public static final List<String> REMOVAL_LIST = Arrays.asList(
                 USER_AGENT,
@@ -77,6 +78,7 @@ public class CustomAuditLoggerValve extends ValveBase {
                 REFERER,
                 INSTANT,
                 USER_NAME,
+                ROLE_LIST,
                 AUTHENTICATED,
                 LOG_MESSAGE,
                 HTTP_STATUS_CODE

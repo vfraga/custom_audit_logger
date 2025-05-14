@@ -1,11 +1,11 @@
 # Custom Audit Logger
 
-This project includes a custom user operation event listener `CustomAuditLogger` that intercepts 
-pre- and post-authentication for auditing purposes, and a Tomcat Valve `RequestDataExtractorValve` for 
-retrieving HTTP request information (e.g., HTTP headers) and adding it to SLF4J's Mapped Diagnostic Context (MDC) map 
+This project includes a custom event handler `CustomAuditLogger` that intercepts authentication success and failure 
+for auditing purposes, and a Tomcat Valve `CustomAuditLoggerValve` for retrieving HTTP request and response information 
+(e.g., HTTP headers, status code) and adding it to SLF4J's Mapped Diagnostic Context (MDC) map 
 so that it can be used in `CustomAuditLogger` where such information is not available. 
 
-See [1] for more information on User Operation Listeners, and [2][3] for more information on Tomcat Valves.
+See [1] for more information on Event Handlers, and [2][3] for more information on Tomcat Valves.
 
 This base version logs the following HTTP headers:
 
@@ -19,12 +19,9 @@ This base version logs the following HTTP headers:
 
 Add the below to the `<IS_HOME>/repository/conf/deployment.toml` file:
 ```toml
-[[event_listener]]
-id = "custom_audit_logger"
-type = "org.wso2.carbon.user.core.listener.UserOperationEventListener"
-name = "org.sample.custom.audit.logger.CustomAuditLogger"
-order = "9983"
-enable = true
+[[event_handler]]
+name = "CustomAuditLogger"
+subscriptions = ["AUTHENTICATION_SUCCESS", "AUTHENTICATION_FAILURE"]
 
 [[catalina.valves]]
 properties.className = "org.sample.custom.tomcat.valve.CustomAuditLoggerValve"
@@ -55,7 +52,7 @@ appender.CUSTOM_AUDIT_LOGFILE.filter.threshold.level = INFO
 ```
 
 * _The policies for this appender rotate the log file every 10 MB and every day. You can adjust this to your liking, see [5]._
-* _You can adjust the appender log pattern (`appender.CUSTOM_AUDIT_LOGFILE.layout.pattern`)  with the pattern converters that adjust best to your requirement, see [6]. It's recommended to keep the `%X{Correlation-ID}` for cross-reference with other log files._
+* _You can adjust the appender log pattern (`appender.CUSTOM_AUDIT_LOGFILE.layout.pattern`) with the pattern converters that adjust best to your requirement, see [6]. It's recommended to keep the `%X{Correlation-ID}` for cross-reference with other log files._
 
 2. Create a Log4J2 Logger [7] named `CUSTOM_AUDIT_LOG` mapped to the `org.sample.custom.audit.logger.CustomAuditLogger` class, set the appender reference to `CUSTOM_AUDIT_LOGFILE`, and add it to the existing `loggers` variable:
 
@@ -70,7 +67,7 @@ logger.CUSTOM_AUDIT_LOG.additivity = false
 
 ---
 
-- [1] https://is.docs.wso2.com/en/5.10.0/develop/user-store-listeners/
+- [1] https://is.docs.wso2.com/en/5.10.0/develop/writing-a-custom-event-handler/
 - [2] https://tomcat.apache.org/tomcat-9.0-doc/config/valve.html
 - [3] https://tomcat.apache.org/tomcat-9.0-doc/api/org/apache/catalina/Valve.html
 - [4] https://logging.apache.org/log4j/2.x/manual/appenders.html
