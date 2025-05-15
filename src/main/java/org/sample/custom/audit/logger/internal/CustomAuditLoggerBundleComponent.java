@@ -10,10 +10,12 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.sample.custom.CustomOAuthTokenInterceptor;
 import org.sample.custom.audit.logger.CustomAuditLogger;
 import org.wso2.carbon.identity.application.authentication.framework.ApplicationAuthenticationService;
 import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
+import org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor;
 import org.wso2.carbon.user.core.service.RealmService;
 
 @Component(
@@ -22,18 +24,42 @@ import org.wso2.carbon.user.core.service.RealmService;
 public class CustomAuditLoggerBundleComponent {
     private static final Log log = LogFactory.getLog(CustomAuditLoggerBundleComponent.class);
 
+    private static void registerService(final ComponentContext context, final Class<?> serviceClass, final Object serviceInstance) {
+        final ServiceRegistration<?> registrationResult;
+
+        try {
+            registrationResult = context.getBundleContext().registerService(
+                    serviceClass.getName(),
+                    serviceInstance,
+                    null
+            );
+
+            if (registrationResult == null) {
+                log.error(String.format(
+                        "Error registering %s as a %s. Service registration result is null.",
+                        serviceInstance.getClass().getCanonicalName(),
+                        serviceClass.getName()
+                ));
+            } else {
+                log.info(String.format(
+                        "%s successfully registered as a %s.",
+                        serviceInstance.getClass().getCanonicalName(),
+                        serviceClass.getName()
+                ));
+            }
+        } catch (Exception e) {
+            log.error(String.format(
+                    "Error registering %s as a %s. Service registration failed.",
+                    serviceInstance.getClass().getCanonicalName(),
+                    serviceClass.getName()
+            ), e);
+        }
+    }
+
     @Activate
     protected void activate(final ComponentContext context) {
-        final CustomAuditLogger customAuditLogger = new CustomAuditLogger();
-
-        final ServiceRegistration<?> customAuditLoggerServiceRegistrationResult = context.getBundleContext()
-                .registerService(AbstractEventHandler.class.getName(), customAuditLogger, null);
-
-        if (customAuditLoggerServiceRegistrationResult == null) {
-            log.error("Error registering CustomAuditLogger as a UserOperationEventListener.");
-        } else {
-            log.info("CustomAuditLogger successfully registered as a UserOperationEventListener.");
-        }
+        registerService(context, AbstractEventHandler.class, new CustomAuditLogger());
+        registerService(context, OAuthEventInterceptor.class, new CustomOAuthTokenInterceptor());
 
         log.info("Custom bundle activated.");
     }
@@ -88,5 +114,20 @@ public class CustomAuditLoggerBundleComponent {
 
     protected void unsetIdentityCoreInitializedEventService(final IdentityCoreInitializedEvent ignored) {
         // do nothing: method declaration for the unbind action for setIdentityCoreInitializedEventService
+    }
+
+    @Reference(
+            name = "org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor",
+            service = org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetOauthEventInterceptor")
+    protected void setAuthEventInterceptor(OAuthEventInterceptor oAuthEventInterceptor) {
+        // do nothing: waiting for OAuthEventInterceptor to initialise
+
+    }
+
+    protected void unsetOauthEventInterceptor(OAuthEventInterceptor oAuthEventInterceptor) {
+        // do nothing: waiting for OAuthEventInterceptor to initialise
     }
 }

@@ -100,6 +100,16 @@
             <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
             <version>${apache.felix.scr.ds.annotations.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
+            <artifactId>org.wso2.carbon.identity.oauth</artifactId>
+            <version>${carbon.identity.oauth.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.extension.identity.oauth2.grantType.jwt</groupId>
+            <artifactId>org.wso2.carbon.identity.oauth2.grant.jwt</artifactId>
+            <version>${carbon.identity.oauth.grant.jwt.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -123,8 +133,7 @@
                         </Private-Package>
                         <Export-Package>
                             !org.sample.custom.audit.logger.internal,
-                            org.sample.custom.audit.logger.*; version="${project.version}",
-                            org.sample.custom.tomcat.valve.*; version="${project.version}"
+                            org.sample.custom.*; version="${project.version}"
                         </Export-Package>
                         <Import-Package>
                             javax.servlet.*; version="${javax.servlet.version.range}",
@@ -140,6 +149,10 @@
                             org.wso2.carbon.identity.core.*; version="${carbon.identity.framework.version.range}",
                             org.wso2.carbon.identity.event.*; version="${carbon.identity.framework.version.range}",
                             org.wso2.carbon.identity.application.*; version="${carbon.identity.framework.version.range}",
+
+                            org.wso2.carbon.identity.oauth.*; version="${carbon.identity.oauth.version.range}",
+                            org.wso2.carbon.identity.oauth2.*; version="${carbon.identity.oauth.version.range}",
+                            org.wso2.carbon.identity.oauth2.grant.jwt.*; version="${carbon.identity.oauth.grant.jwt.version.range}",
 
                             org.wso2.carbon.user.core.*; version="${carbon.kernel.version.range}",
                             org.wso2.carbon.user.api.*; version="${carbon.user.api.version.range}",
@@ -173,8 +186,12 @@
 
         <!--Carbon Identity Framework-->
         <carbon.identity.framework.version>5.17.5</carbon.identity.framework.version>
+        <carbon.identity.oauth.version>6.4.2</carbon.identity.oauth.version>
+        <carbon.identity.oauth.grant.jwt.version>1.0.26</carbon.identity.oauth.grant.jwt.version>
 
-        <carbon.identity.framework.version.range>[5.17.5,6.0.0)</carbon.identity.framework.version.range>
+        <carbon.identity.framework.version.range>[5.17.5, 6.0.0)</carbon.identity.framework.version.range>
+        <carbon.identity.oauth.version.range>[6.4.2, 7.0.0)</carbon.identity.oauth.version.range>
+        <carbon.identity.oauth.grant.jwt.version.range>[1.0.26, 2.0.0)</carbon.identity.oauth.grant.jwt.version.range>
 
         <!-- Common versions -->
         <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
@@ -183,10 +200,10 @@
         <osgi.framework.version.range>[1.7.0, 2.0.0)</osgi.framework.version.range>
         <osgi.service.component.version.range>[1.2.0, 2.0.0)</osgi.service.component.version.range>
 
-        <org.slf4j.version.range>[1.6.1,2.0.0)</org.slf4j.version.range>
+        <org.slf4j.version.range>[1.6.1, 2.0.0)</org.slf4j.version.range>
         <javax.servlet.version.range>[2.6.0, 3.0.0)</javax.servlet.version.range>
 
-        <commons-lang.wso2.osgi.version.range>[2.6.0,3.0.0)</commons-lang.wso2.osgi.version.range>
-        <commons-logging.osgi.version.range>[1.2,2.0)</commons-logging.osgi.version.range>
+        <commons-lang.wso2.osgi.version.range>[2.6.0, 3.0.0)</commons-lang.wso2.osgi.version.range>
+        <commons-logging.osgi.version.range>[1.2, 2.0)</commons-logging.osgi.version.range>
     </properties>
 </project>

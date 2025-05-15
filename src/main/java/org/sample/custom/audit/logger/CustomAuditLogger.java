@@ -4,14 +4,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sample.custom.audit.logger.internal.ServiceHolder;
 import org.sample.custom.audit.logger.utils.Utils;
-import org.sample.custom.tomcat.valve.CustomAuditLoggerValve.Constants;
+import org.sample.custom.common.Constants;
 import org.slf4j.MDC;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorStatus;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticationRequest;
+import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
-import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
 import org.wso2.carbon.user.core.UserStoreManager;
@@ -20,7 +21,10 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+
+import static org.wso2.carbon.identity.oauth.common.OAuthConstants.GrantTypes.AUTHORIZATION_CODE;
 
 public class CustomAuditLogger extends AbstractEventHandler {
     private static final Log log = LogFactory.getLog(CustomAuditLogger.class);
@@ -29,29 +33,51 @@ public class CustomAuditLogger extends AbstractEventHandler {
 
     private static final Set<String> SUBSCRIPTIONS = new HashSet<>(Arrays.asList(
             IdentityEventConstants.EventName.AUTHENTICATION_SUCCESS.name(),
-            IdentityEventConstants.EventName.AUTHENTICATION_FAILURE.name()
+            IdentityEventConstants.EventName.AUTHENTICATION_FAILURE.name(),
+            IdentityEventConstants.EventName.AUTHENTICATION_STEP_FAILURE.name()
     ));
 
+    private static final String RESPONSE_TYPE_PARAM = "response_type";
+    private static final String AUTH_CODE_RESPONSE_TYPE = "code";
+
     public static void logFromMDCData() {
-        final String logMessage = MDC.get(Constants.LOG_MESSAGE);
+        final String logMessage = MDC.get(Constants.MDC.LOG_MESSAGE);
 
         if (logMessage != null) {
-            final String userName = MDC.get(Constants.USER_NAME);
-            final String instant = MDC.get(Constants.INSTANT);
-            final String userAgent = MDC.get(Constants.USER_AGENT);
-            final String referer = MDC.get(Constants.REFERER);
-            final String xForwardedFor = MDC.get(Constants.X_FORWARDED_FOR);
-            final String statusCode = MDC.get(Constants.HTTP_STATUS_CODE);
-            final String roleList = MDC.get(Constants.ROLE_LIST);
+            final String userName = MDC.get(Constants.MDC.USER_NAME);
+            final String instant = MDC.get(Constants.MDC.INSTANT);
+            final String userAgent = MDC.get(Constants.MDC.USER_AGENT);
+            final String referer = MDC.get(Constants.MDC.REFERER);
+            final String grantType = MDC.get(Constants.MDC.GRANT_TYPE);
 
-            log.info(String.format(logMessage, userName, instant, userAgent, referer, xForwardedFor, statusCode, roleList));
+            final String xForwardedFor = MDC.get(Constants.MDC.X_FORWARDED_FOR);
+            final String statusCode = MDC.get(Constants.MDC.HTTP_STATUS_CODE);
+            final String roleList = MDC.get(Constants.MDC.ROLE_LIST);
+
+            log.info(String.format(logMessage, userName, grantType, instant, userAgent, referer, xForwardedFor, statusCode, roleList));
         } else {
             log.debug("Cannot log with a null message.");
         }
     }
 
+    private static boolean isAuthorizationCode(final AuthenticationContext context) {
+        final AuthenticationRequest authRequest = context.getAuthenticationRequest();
+
+        if (authRequest != null) {
+            final String[] responseTypes = authRequest.getRequestQueryParam(RESPONSE_TYPE_PARAM);
+
+            if (responseTypes != null) {
+                return Arrays.stream(responseTypes)
+                        .filter(Objects::nonNull)
+                        .anyMatch(responseTypeString -> responseTypeString.contains(AUTH_CODE_RESPONSE_TYPE));
+            }
+        }
+
+        return false;
+    }
+
     @Override
-    public void handleEvent(final Event event) throws IdentityEventException {
+    public void handleEvent(final Event event) {
         final String eventName = event.getEventName();
 
         log.debug(eventName + " event received to " + getName() + ".");
@@ -64,35 +90,45 @@ public class CustomAuditLogger extends AbstractEventHandler {
             final Map<String, Object> params = Utils.getParamsFromProperties(eventProperties);
             final AuthenticatorStatus status = Utils.getAuthenticatorStatusFromProperties(eventProperties);
 
-            final boolean authenticated = status == AuthenticatorStatus.PASS;
-            final AuthenticatedUser user = context.getLastAuthenticatedUser();
-
-            final UserStoreManager userStoreManager;
-
-            if (user.getUserStoreDomain() != null) {
-                userStoreManager = ServiceHolder.getInstance()
-                        .getRealmService()
-                        .getBootstrapRealm()
-                        .getUserStoreManager()
-                        .getSecondaryUserStoreManager(user.getUserStoreDomain());
-            } else {
-                userStoreManager = ServiceHolder.getInstance()
-                        .getRealmService()
-                        .getBootstrapRealm()
-                        .getUserStoreManager();
+            if (isAuthorizationCode(context)) {
+                MDC.put(Constants.MDC.GRANT_TYPE, AUTHORIZATION_CODE);
             }
 
-            final String[] roleArray = userStoreManager.getRoleListOfUser(user.getUserName());
+            final boolean authenticated = status == AuthenticatorStatus.PASS;
 
-            final String message = authenticated ?
-                    LogMessage.POST_AUTHENTICATE_SUCCESS_MESSAGE_UNAME_ATTIME_UAGENT_REF_XFF_SC_RL :
-                    LogMessage.POST_AUTHENTICATE_FAILURE_MESSAGE_UNAME_ATTIME_UAGENT_REF_XFF_SC_RL;
+            MDC.put(Constants.MDC.AUTHENTICATED, String.valueOf(authenticated));
+            MDC.put(Constants.MDC.INSTANT, Instant.now().toString());  // UTC timestamp string
 
-            MDC.put(Constants.AUTHENTICATED, String.valueOf(authenticated));
-            MDC.put(Constants.LOG_MESSAGE, message);
-            MDC.put(Constants.USER_NAME, user.getUserName());
-            MDC.put(Constants.INSTANT, Instant.now().toString());  // UTC timestamp string
-            MDC.put(Constants.ROLE_LIST, Arrays.toString(roleArray));
+            if (authenticated) {
+                final AuthenticatedUser user = context.getLastAuthenticatedUser();
+
+                final UserStoreManager userStoreManager;
+
+                if (user.getUserStoreDomain() != null) {
+                    userStoreManager = ServiceHolder.getInstance()
+                            .getRealmService()
+                            .getBootstrapRealm()
+                            .getUserStoreManager()
+                            .getSecondaryUserStoreManager(user.getUserStoreDomain());
+                } else {
+                    userStoreManager = ServiceHolder.getInstance()
+                            .getRealmService()
+                            .getBootstrapRealm()
+                            .getUserStoreManager();
+                }
+
+                final String[] roleArray = userStoreManager.getRoleListOfUser(user.getUserName());
+
+                MDC.put(Constants.MDC.USER_NAME, user.getUserName());
+                MDC.put(Constants.MDC.ROLE_LIST, Arrays.toString(roleArray));
+
+                MDC.put(Constants.MDC.LOG_MESSAGE, Constants.LogMessage.AUTHENTICATION_SUCCESS_MESSAGE_UNAME_GTYPE_ATTIME_UAGENT_REF_XFF_SC_RL);
+            } else {
+                final User user = Utils.getUserFromParams(params);
+                MDC.put(Constants.MDC.USER_NAME, user.getUserName());
+
+                MDC.put(Constants.MDC.LOG_MESSAGE, Constants.LogMessage.AUTHENTICATION_FAILURE_MESSAGE_UNAME_GTYPE_ATTIME_UAGENT_REF_XFF_SC);
+            }
 
         } catch (final Throwable e) {
             log.error("Error while handling event: " + eventName, e);
@@ -107,15 +143,5 @@ public class CustomAuditLogger extends AbstractEventHandler {
     @Override
     public int getPriority(final MessageContext messageContext) {
         return PRIORITY;
-    }
-
-    private static final class LogMessage {
-        private static final String POST_AUTHENTICATE_SUCCESS_MESSAGE_UNAME_ATTIME_UAGENT_REF_XFF_SC_RL =
-                "Login successful for username '%s' at %s. " +
-                        "User Agent: %s | Referer: %s | X-Forwarded-For: %s | Status-Code: %s | Role-List: %s";
-
-        private static final String POST_AUTHENTICATE_FAILURE_MESSAGE_UNAME_ATTIME_UAGENT_REF_XFF_SC_RL =
-                "Login failed for username '%s' at %s. " +
-                        "User Agent: %s | Referer: %s | X-Forwarded-For: %s | Status-Code: %s | Role-List: %s";
     }
 }
