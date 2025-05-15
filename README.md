@@ -1,9 +1,10 @@
 # Custom Audit Logger
 
-This project includes a custom event handler `CustomAuditLogger` that intercepts authentication success and failure 
-for auditing purposes, and a Tomcat Valve `CustomAuditLoggerValve` for retrieving HTTP request and response information 
-(e.g., HTTP headers, status code) and adding it to SLF4J's Mapped Diagnostic Context (MDC) map 
-so that it can be used in `CustomAuditLogger` where such information is not available. 
+This project includes a custom event handler `CustomAuditLogger` that intercepts authentication success and failure
+events for auditing purposes, an OAuth event interceptor to catch authentication flows that don't trigger
+authentication events (e.g., password grant, JWT-bearer grant), and a Tomcat Valve `CustomAuditLoggerValve`
+for retrieving HTTP request and response information (e.g., HTTP headers, status code) and adding it to SLF4J's
+Mapped Diagnostic Context (MDC) map so that it can be used in `CustomAuditLogger` where such information is not available.
 
 See [1] for more information on Event Handlers, and [2][3] for more information on Tomcat Valves.
 
@@ -21,7 +22,7 @@ Add the below to the `<IS_HOME>/repository/conf/deployment.toml` file:
 ```toml
 [[event_handler]]
 name = "CustomAuditLogger"
-subscriptions = ["AUTHENTICATION_SUCCESS", "AUTHENTICATION_FAILURE"]
+subscriptions = ["AUTHENTICATION_SUCCESS", "AUTHENTICATION_FAILURE", "AUTHENTICATION_STEP_FAILURE"]
 
 [[catalina.valves]]
 properties.className = "org.sample.custom.tomcat.valve.CustomAuditLoggerValve"

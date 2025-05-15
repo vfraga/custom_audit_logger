@@ -5,6 +5,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorStatus;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
+import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
+import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
@@ -22,29 +24,28 @@ public final class Utils {
         // Prevent instantiation
     }
 
-    public static String getUserStoreDomain(org.wso2.carbon.user.api.UserStoreManager userStoreManager) {
-        String domainNameProperty = null;
+    public static String getUserStoreDomain(final org.wso2.carbon.user.api.UserStoreManager userStoreManager) {
         if (userStoreManager instanceof org.wso2.carbon.user.core.UserStoreManager) {
-            domainNameProperty = ((org.wso2.carbon.user.core.UserStoreManager)
-                    userStoreManager).getRealmConfiguration()
+            final String domainNameProperty = ((org.wso2.carbon.user.core.UserStoreManager)userStoreManager)
+                    .getRealmConfiguration()
                     .getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
             if (StringUtils.isBlank(domainNameProperty)) {
-                domainNameProperty = IdentityUtil.getPrimaryDomainName();
+                return IdentityUtil.getPrimaryDomainName();
+            } else {
+                return domainNameProperty;
             }
+        } else {
+            return null;
         }
-        return domainNameProperty;
     }
 
-    public static String getTenantDomain(org.wso2.carbon.user.api.UserStoreManager userStoreManager) throws IdentityEventException {
+    public static String getTenantDomain(final org.wso2.carbon.user.api.UserStoreManager userStoreManager) throws IdentityEventException {
         try {
             return IdentityTenantUtil.getTenantDomain(userStoreManager.getTenantId());
         } catch (UserStoreException e) {
-            throw new IdentityEventException(e.getMessage(), e);
+            log.error("Error while getting tenant domain for user store manager: " + userStoreManager, e);
+            return null;
         }
-    }
-
-    public static AuthenticationContext getAuthenticationContextFromProperties(final Map<String, Object> properties) {
-        return (AuthenticationContext) properties.get(IdentityEventConstants.EventProperty.CONTEXT);
     }
 
     public static Map<String, Object> getParamsFromProperties(final Map<String, Object> properties) {
@@ -52,8 +53,34 @@ public final class Utils {
         return params != null ? params : new HashMap<>();
     }
 
+    public static AuthenticationContext getAuthenticationContextFromProperties(final Map<String, Object> properties) {
+        final Object contextObject = properties.get(IdentityEventConstants.EventProperty.CONTEXT);
+
+        if (contextObject instanceof AuthenticationContext) {
+            return (AuthenticationContext) contextObject;
+        } else {
+            return new AuthenticationContext();
+        }
+    }
+
+    public static User getUserFromParams(final Map<String, Object> params) {
+        final Object userObject = params.get(FrameworkConstants.AnalyticsAttributes.USER);
+
+        if (userObject instanceof User) {
+            return (User) userObject;
+        } else {
+            return new User();
+        }
+    }
+
     public static AuthenticatorStatus getAuthenticatorStatusFromProperties(final Map<String, Object> properties) {
-        return (AuthenticatorStatus) properties.get(IdentityEventConstants.EventProperty.AUTHENTICATION_STATUS);
+        final Object authenticationStatus = properties.get(IdentityEventConstants.EventProperty.AUTHENTICATION_STATUS);
+
+        if (authenticationStatus instanceof AuthenticatorStatus) {
+            return (AuthenticatorStatus) properties.get(IdentityEventConstants.EventProperty.AUTHENTICATION_STATUS);
+        } else {
+            return AuthenticatorStatus.FAIL;
+        }
     }
 
     @SuppressWarnings("unchecked")
