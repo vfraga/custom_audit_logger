@@ -1,18 +1,12 @@
 package org.sample.custom.audit.logger.utils;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorStatus;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.common.model.User;
-import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
-import org.wso2.carbon.identity.event.IdentityEventException;
-import org.wso2.carbon.user.api.UserStoreException;
-import org.wso2.carbon.user.core.UserCoreConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,30 +16,6 @@ public final class Utils {
 
     private Utils() {
         // Prevent instantiation
-    }
-
-    public static String getUserStoreDomain(final org.wso2.carbon.user.api.UserStoreManager userStoreManager) {
-        if (userStoreManager instanceof org.wso2.carbon.user.core.UserStoreManager) {
-            final String domainNameProperty = ((org.wso2.carbon.user.core.UserStoreManager)userStoreManager)
-                    .getRealmConfiguration()
-                    .getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
-            if (StringUtils.isBlank(domainNameProperty)) {
-                return IdentityUtil.getPrimaryDomainName();
-            } else {
-                return domainNameProperty;
-            }
-        } else {
-            return null;
-        }
-    }
-
-    public static String getTenantDomain(final org.wso2.carbon.user.api.UserStoreManager userStoreManager) throws IdentityEventException {
-        try {
-            return IdentityTenantUtil.getTenantDomain(userStoreManager.getTenantId());
-        } catch (UserStoreException e) {
-            log.error("Error while getting tenant domain for user store manager: " + userStoreManager, e);
-            return null;
-        }
     }
 
     public static Map<String, Object> getParamsFromProperties(final Map<String, Object> properties) {

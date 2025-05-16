@@ -16,6 +16,7 @@ import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
 import org.wso2.carbon.user.core.UserStoreManager;
+import org.wso2.carbon.user.core.service.RealmService;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -101,20 +102,21 @@ public class CustomAuditLogger extends AbstractEventHandler {
 
             if (authenticated) {
                 final AuthenticatedUser user = context.getLastAuthenticatedUser();
+                final RealmService realmService = ServiceHolder.getInstance().getRealmService();
+                final String tenantDomain = user.getTenantDomain();
+                final int tenantId = realmService.getTenantManager().getTenantId(tenantDomain);
 
                 final UserStoreManager userStoreManager;
 
                 if (user.getUserStoreDomain() != null) {
-                    userStoreManager = ServiceHolder.getInstance()
-                            .getRealmService()
-                            .getBootstrapRealm()
-                            .getUserStoreManager()
+                    userStoreManager = ((UserStoreManager) realmService
+                            .getTenantUserRealm(tenantId)
+                            .getUserStoreManager())
                             .getSecondaryUserStoreManager(user.getUserStoreDomain());
                 } else {
-                    userStoreManager = ServiceHolder.getInstance()
-                            .getRealmService()
-                            .getBootstrapRealm()
-                            .getUserStoreManager();
+                    userStoreManager = ((UserStoreManager) realmService
+                            .getTenantUserRealm(tenantId)
+                            .getUserStoreManager());
                 }
 
                 final String[] roleArray = userStoreManager.getRoleListOfUser(user.getUserName());
