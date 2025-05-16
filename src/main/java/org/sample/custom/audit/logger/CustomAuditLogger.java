@@ -118,7 +118,6 @@ public class CustomAuditLogger extends AbstractEventHandler {
         }
     }
 
-
     @Override
     public String getName() {
         return HANDLER_NAME;
