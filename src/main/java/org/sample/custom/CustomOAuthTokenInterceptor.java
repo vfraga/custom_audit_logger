@@ -2,7 +2,7 @@ package org.sample.custom;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sample.custom.audit.logger.internal.ServiceHolder;
+import org.sample.custom.audit.logger.utils.Utils;
 import org.sample.custom.common.Constants;
 import org.slf4j.MDC;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
@@ -56,32 +56,16 @@ public class CustomOAuthTokenInterceptor extends AbstractOAuthEventInterceptor {
             MDC.put(Constants.MDC.AUTHENTICATED, String.valueOf(authenticated));
             MDC.put(Constants.MDC.INSTANT, Instant.now().toString());  // UTC timestamp string
 
+            final AuthenticatedUser user = getAuthenticatedUser(tokReqMsgCtx);
+
             if (authenticated) {
-                final AuthenticatedUser user = getAuthenticatedUser(tokReqMsgCtx);
-
-                final UserStoreManager userStoreManager;
-
-                if (user.getUserStoreDomain() != null) {
-                    userStoreManager = ServiceHolder.getInstance()
-                            .getRealmService()
-                            .getBootstrapRealm()
-                            .getUserStoreManager()
-                            .getSecondaryUserStoreManager(user.getUserStoreDomain());
-                } else {
-                    userStoreManager = ServiceHolder.getInstance()
-                            .getRealmService()
-                            .getBootstrapRealm()
-                            .getUserStoreManager();
-                }
-
+                final UserStoreManager userStoreManager = Utils.getUserStoreManagerFromUser(user);
                 final String[] roleArray = userStoreManager.getRoleListOfUser(user.getUserName());
 
                 MDC.put(Constants.MDC.USER_NAME, user.getUserName());
                 MDC.put(Constants.MDC.ROLE_LIST, Arrays.toString(roleArray));
-
                 MDC.put(Constants.MDC.LOG_MESSAGE, Constants.LogMessage.AUTHENTICATION_SUCCESS_MESSAGE_UNAME_GTYPE_ATTIME_UAGENT_REF_XFF_SC_RL);
             } else {
-                final AuthenticatedUser user = getAuthenticatedUser(tokReqMsgCtx);
                 final String username = user != null ? user.getUserName() : getResourceOwnerUsername(tokReqMsgCtx);
 
                 MDC.put(Constants.MDC.USER_NAME, username);

@@ -2,7 +2,6 @@ package org.sample.custom.audit.logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sample.custom.audit.logger.internal.ServiceHolder;
 import org.sample.custom.audit.logger.utils.Utils;
 import org.sample.custom.common.Constants;
 import org.slf4j.MDC;
@@ -101,32 +100,16 @@ public class CustomAuditLogger extends AbstractEventHandler {
 
             if (authenticated) {
                 final AuthenticatedUser user = context.getLastAuthenticatedUser();
-
-                final UserStoreManager userStoreManager;
-
-                if (user.getUserStoreDomain() != null) {
-                    userStoreManager = ServiceHolder.getInstance()
-                            .getRealmService()
-                            .getBootstrapRealm()
-                            .getUserStoreManager()
-                            .getSecondaryUserStoreManager(user.getUserStoreDomain());
-                } else {
-                    userStoreManager = ServiceHolder.getInstance()
-                            .getRealmService()
-                            .getBootstrapRealm()
-                            .getUserStoreManager();
-                }
-
+                final UserStoreManager userStoreManager = Utils.getUserStoreManagerFromUser(user);
                 final String[] roleArray = userStoreManager.getRoleListOfUser(user.getUserName());
 
                 MDC.put(Constants.MDC.USER_NAME, user.getUserName());
                 MDC.put(Constants.MDC.ROLE_LIST, Arrays.toString(roleArray));
-
                 MDC.put(Constants.MDC.LOG_MESSAGE, Constants.LogMessage.AUTHENTICATION_SUCCESS_MESSAGE_UNAME_GTYPE_ATTIME_UAGENT_REF_XFF_SC_RL);
             } else {
                 final User user = Utils.getUserFromParams(params);
-                MDC.put(Constants.MDC.USER_NAME, user.getUserName());
 
+                MDC.put(Constants.MDC.USER_NAME, user.getUserName());
                 MDC.put(Constants.MDC.LOG_MESSAGE, Constants.LogMessage.AUTHENTICATION_FAILURE_MESSAGE_UNAME_GTYPE_ATTIME_UAGENT_REF_XFF_SC);
             }
 
