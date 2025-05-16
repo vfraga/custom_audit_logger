@@ -2,7 +2,6 @@ package org.sample.custom.audit.logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sample.custom.audit.logger.internal.ServiceHolder;
 import org.sample.custom.audit.logger.utils.Utils;
 import org.sample.custom.common.Constants;
 import org.slf4j.MDC;
@@ -15,9 +14,7 @@ import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
-import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.UserStoreManager;
-import org.wso2.carbon.user.core.service.RealmService;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -120,7 +117,6 @@ public class CustomAuditLogger extends AbstractEventHandler {
             log.error("Error while handling event: " + eventName, e);
         }
     }
-
 
 
     @Override

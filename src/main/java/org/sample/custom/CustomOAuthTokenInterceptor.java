@@ -2,7 +2,6 @@ package org.sample.custom;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sample.custom.audit.logger.internal.ServiceHolder;
 import org.sample.custom.audit.logger.utils.Utils;
 import org.sample.custom.common.Constants;
 import org.slf4j.MDC;
