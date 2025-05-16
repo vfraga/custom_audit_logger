@@ -15,6 +15,7 @@ import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
+import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.UserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
 
@@ -102,33 +103,16 @@ public class CustomAuditLogger extends AbstractEventHandler {
 
             if (authenticated) {
                 final AuthenticatedUser user = context.getLastAuthenticatedUser();
-                final RealmService realmService = ServiceHolder.getInstance().getRealmService();
-                final String tenantDomain = user.getTenantDomain();
-                final int tenantId = realmService.getTenantManager().getTenantId(tenantDomain);
-
-                final UserStoreManager userStoreManager;
-
-                if (user.getUserStoreDomain() != null) {
-                    userStoreManager = ((UserStoreManager) realmService
-                            .getTenantUserRealm(tenantId)
-                            .getUserStoreManager())
-                            .getSecondaryUserStoreManager(user.getUserStoreDomain());
-                } else {
-                    userStoreManager = ((UserStoreManager) realmService
-                            .getTenantUserRealm(tenantId)
-                            .getUserStoreManager());
-                }
-
+                final UserStoreManager userStoreManager = Utils.getUserStoreManagerFromUser(user);
                 final String[] roleArray = userStoreManager.getRoleListOfUser(user.getUserName());
 
                 MDC.put(Constants.MDC.USER_NAME, user.getUserName());
                 MDC.put(Constants.MDC.ROLE_LIST, Arrays.toString(roleArray));
-
                 MDC.put(Constants.MDC.LOG_MESSAGE, Constants.LogMessage.AUTHENTICATION_SUCCESS_MESSAGE_UNAME_GTYPE_ATTIME_UAGENT_REF_XFF_SC_RL);
             } else {
                 final User user = Utils.getUserFromParams(params);
-                MDC.put(Constants.MDC.USER_NAME, user.getUserName());
 
+                MDC.put(Constants.MDC.USER_NAME, user.getUserName());
                 MDC.put(Constants.MDC.LOG_MESSAGE, Constants.LogMessage.AUTHENTICATION_FAILURE_MESSAGE_UNAME_GTYPE_ATTIME_UAGENT_REF_XFF_SC);
             }
 
@@ -136,6 +120,8 @@ public class CustomAuditLogger extends AbstractEventHandler {
             log.error("Error while handling event: " + eventName, e);
         }
     }
+
+
 
     @Override
     public String getName() {

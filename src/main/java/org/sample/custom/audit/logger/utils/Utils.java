@@ -2,11 +2,16 @@ package org.sample.custom.audit.logger.utils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sample.custom.audit.logger.internal.ServiceHolder;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorStatus;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
+import org.wso2.carbon.user.api.UserStoreException;
+import org.wso2.carbon.user.core.UserStoreManager;
+import org.wso2.carbon.user.core.service.RealmService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +21,26 @@ public final class Utils {
 
     private Utils() {
         // Prevent instantiation
+    }
+
+    public static UserStoreManager getUserStoreManagerFromUser(final AuthenticatedUser user) throws UserStoreException {
+        final RealmService realmService = ServiceHolder.getInstance().getRealmService();
+        final String tenantDomain = user.getTenantDomain();
+        final int tenantId = realmService.getTenantManager().getTenantId(tenantDomain);
+
+        final UserStoreManager userStoreManager;
+
+        if (user.getUserStoreDomain() != null) {
+            userStoreManager = ((UserStoreManager) realmService
+                    .getTenantUserRealm(tenantId)
+                    .getUserStoreManager())
+                    .getSecondaryUserStoreManager(user.getUserStoreDomain());
+        } else {
+            userStoreManager = ((UserStoreManager) realmService
+                    .getTenantUserRealm(tenantId)
+                    .getUserStoreManager());
+        }
+        return userStoreManager;
     }
 
     public static Map<String, Object> getParamsFromProperties(final Map<String, Object> properties) {
